@@ -11,15 +11,15 @@ const keys = require('./keys.json');
 const PORT = parseInt(process.argv[2] || process.env.APP_PORT || 3000);
 
 const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather';
-const MAP_URL='https://maps.googleapis.com/maps/api/staticmap'
+const MAP_URL = 'https://maps.googleapis.com/maps/api/staticmap'
 const NEWS_URL = 'https://newsapi.org/v2/top-headlines'
 
 const makeInvocation = function(url) {
-    return ((params) => 
+    return ((params) =>
         new Promise((resolve, reject) => {
-            request.get(url, ('qs' in params? params: { qs: params }),
+            request.get(url, ('qs' in params ? params : { qs: params }),
                 (err, h, body) => {
-                    if (err) 
+                    if (err)
                         return reject(err);
                     if (h.headers['content-type'].startsWith('application/json'))
                         return resolve(JSON.parse(body));
@@ -53,10 +53,9 @@ app.get('/map', (req, resp) => {
     //Use the exact query parameter names as keys
     //Latitude and longitude from coord object above
     //API key is in keys.map
-    const params = {
-    }
+    const params = {}
 
-    getMap({ qs: params, encoding: null})
+    getMap({ qs: params, encoding: null })
         .then(result => {
             resp.status(200);
             resp.type('image/png')
@@ -76,6 +75,9 @@ app.get('/information', (req, resp) => {
     //Weather for city is in cityName variable
     //API key is in keys.weather
     const params = {
+        q: cityName,
+        unit: 'metric',
+        appid: keys.weather
     }
 
     getWeather(params)
@@ -87,8 +89,12 @@ app.get('/information', (req, resp) => {
             //The 2 character country code is found in countryCode variable
             //API key is in keys.news
             const params = {
+                country: countryCode,
+                category: 'technology',
+                apikey: keys.news
+
             }
-            return (Promise.all([ result, getNews(params) ]));
+            return (Promise.all([result, getNews(params)]));
         })
         .then(result => {
             resp.status(200);
@@ -127,9 +133,9 @@ app.get('/information', (req, resp) => {
             })
         })
         .catch(error => {
-            resp.status(400); 
-            resp.type('text/plain'); 
-            resp.send(error); 
+            resp.status(400);
+            resp.type('text/plain');
+            resp.send(error);
             return;
         })
 
