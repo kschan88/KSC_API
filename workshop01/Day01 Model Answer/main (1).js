@@ -54,6 +54,12 @@ app.get('/map', (req, resp) => {
     //Latitude and longitude from coord object above
     //API key is in keys.map
     const params = {
+        center: `${coord.lat},${coord.lon}`,
+        zoom: 15,
+        size: '200x200',
+        format: 'png',
+        markers: `size:mid|color:orange|label:A|${coord.lat},${coord.lon}`,
+        key: keys.map
     }
 
     getMap({ qs: params, encoding: null})
@@ -66,7 +72,18 @@ app.get('/map', (req, resp) => {
             resp.status(400);
             resp.send(error);
         });
-});
+
+        /*
+    request.get(MAP_URL, 
+        { qs: params, encoding: null },
+        (err, h, body) => {
+            resp.status(200);
+            resp.type('image/png')
+            resp.send(body);
+        }
+    );
+    */
+})
 
 app.get('/information', (req, resp) => {
     const cityName = req.query.cityName;
@@ -76,8 +93,9 @@ app.get('/information', (req, resp) => {
     //Weather for city is in cityName variable
     //API key is in keys.weather
     const params = {
-		q: cityName,
-		appid: keys.weather
+        q: cityName,
+        units: 'metric',
+        appid: keys.weather
     }
 
     getWeather(params)
@@ -89,10 +107,9 @@ app.get('/information', (req, resp) => {
             //The 2 character country code is found in countryCode variable
             //API key is in keys.news
             const params = {
-				country: countryCode,
-				category: 'technology',
-				apikey: keys.news
-				
+                country: countryCode,
+                category: 'technology',
+                apiKey: keys.news
             }
             return (Promise.all([ result, getNews(params) ]));
         })
