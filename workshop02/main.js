@@ -73,34 +73,31 @@ app.get('/api/state/:state',
 
 
 // TODO GET /api/city/:cityId  
-app.get('/api/city/:CityId', (req, resp) => {
-    const city_id = req.params.cityId;
+app.get('/api/city/:cityId',
+    (req, resp) => {
+        const cityAbbrev = req.params.cityId;
+        resp.type('application/json')
+        db.findCityById()
+            .then(result => {
+                if (result.indexOf(cityAbbrev.toUpperCase()) < 0) {
+                    resp.status(400);
+                    resp.json({ error: `Not a valid city: '${cityAbbrev}'` })
+                    return;
+                }
+                return (db.findCityById(cityAbbrev))
+            })
+            .then(result => {
+                resp.status(200)
+                resp.json(result);
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
 
-    resp.type('application/json')
-    db.findCityById()
-        .then(result => {
-            if (result.indexOf(city_id.toUpperCase()) < 0) {
-                resp.status(404)
-                resp.json({ error: `Not a valid city: '${city_id}'` })
-                return;
-            }
-            return (db.findCityById(city_id))
-        })
-
-    .then(result => {
-            // 200 OK
-            resp.status(200)
-            resp.json(result);
-
-        })
-        .catch(error => {
-            //400 Bad request
-            resp.status(400)
-            resp.json({ error: error })
-
-        });
-
-});
+    }
+);
 
 
 // TODO POST /api/city
