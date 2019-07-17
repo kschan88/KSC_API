@@ -11,14 +11,15 @@ const keys = require('./keys.json')
 
 console.info(`Using ${keys.mongo}`);
 
-const db = CitiesDB({
-    connectionUrl: keys.mongo,
-    databaseName: 'zips',
-    collectionName: 'city'
+const db = CitiesDB({  
+	connectionUrl: keys.mongo, 
+	databaseName: 'zips', 
+	collectionName: 'city'
 });
 
 const app = express();
-app.set('etag', false);
+
+app.set('etag', false)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,25 +28,28 @@ app.use(express.urlencoded({ extended: true }));
 
 // Mandatory workshop
 // TODO GET /api/states
-app.get('/api/states', (req, resp) => {
-    // content-type: application/json
-    resp.type('application/json')
-    db.findAllStates()
-        .then(result => {
-            // 200 OK
-            resp.status(200)
-            resp.json(result);
-        })
-        .catch(error => {
-            //400 Bad request
-            resp.status(400)
-            resp.json({ error: error })
-        });
-});
+app.get('/api/states', 
+    (req, resp) => {
 
+        // Content-Type: appliction/json
+        resp.type('application/json')
+
+        db.findAllStates()
+            .then(result => {
+                // 200 OK
+                resp.status(200)
+                resp.json(result);
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
+    }
+);
 
 // TODO GET /api/state/:state
-app.get('/api/state/:state',
+app.get('/api/state/:state', 
     (req, resp) => {
         const stateAbbrev = req.params.state;
         resp.type('application/json')
@@ -53,7 +57,7 @@ app.get('/api/state/:state',
             .then(result => {
                 if (result.indexOf(stateAbbrev.toUpperCase()) < 0) {
                     resp.status(400);
-                    resp.json({ error: `Not a valid state: '${stateAbbrev}'` })
+                    resp.json({ error: `Not a valid state: '${stateAbbrev}'`})
                     return;
                 }
                 return (db.findCitiesByState(stateAbbrev))
@@ -67,12 +71,10 @@ app.get('/api/state/:state',
                 resp.status(400)
                 resp.json({ error: error })
             });
-
     }
 );
 
-
-// TODO GET /api/city/:cityId  
+// TODO GET /api/city/:cityId
 app.get('/api/city/:cityId',
     (req, resp) => {
         resp.type('application/json');
@@ -93,8 +95,16 @@ app.get('/api/city/:cityId',
     }
 );
 
-
 // TODO POST /api/city
+// Content-Type: application/json
+/*
+    {
+    "city" : "BARRE",
+    "loc" : [ -72.108354, 42.409698 ],
+    "pop" : 4546,
+    "state" : "MA"
+}
+*/
 app.post('/api/city', 
     (req, resp) => {
         const newCity = req.body;
@@ -111,11 +121,8 @@ app.post('/api/city',
     }
 )
 
-
-
 // Optional workshop
 // TODO HEAD /api/state/:state
-
 
 
 // TODO GET /state/:state/count
@@ -129,15 +136,15 @@ app.post('/api/city',
 // End of workshop
 
 db.getDB()
-    .then((db) => {
-        const PORT = parseInt(process.argv[2] || process.env.APP_PORT) || 3000;
+	.then((db) => {
+		const PORT = parseInt(process.argv[2] || process.env.APP_PORT) || 3000;
 
-        console.info('Connected to MongoDB. Starting application');
-        app.listen(PORT, () => {
-            console.info(`Application started on port ${PORT} at ${new Date()}`);
-        });
-    })
-    .catch(error => {
-        console.error('Cannot connect to mongo: ', error);
-        process.exit(1);
-    });
+		console.info('Connected to MongoDB. Starting application');
+		app.listen(PORT, () => {
+			console.info(`Application started on port ${PORT} at ${new Date()}`);
+		});
+	})
+	.catch(error => {
+		console.error('Cannot connect to mongo: ', error);
+		process.exit(1);
+	});
