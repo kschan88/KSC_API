@@ -1,0 +1,1 @@
+openapi-generator generate -i schema/city-api.yaml -o py-src -g python

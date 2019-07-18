@@ -1,0 +1,37 @@
+Workshop schema for fixer.io
+`{
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "$id": "rates-response",
+   "title": "Response from fixer.io",
+   "type": "object",
+   "definitions": {
+       "currencies": {
+           "type": "string",
+           "enum": [ "AUD", "CAD", "CHF", "CNY", "GBP", "JPY", "USD", "SGD" ]
+       }
+   },
+   "properties": {
+       "success": {
+           "type": "boolean",
+       },
+       "timestamp": {
+           "type": "integer"
+       },
+       "base": {
+           "$ref": "#/definitions/currencies"
+       },
+       "date": {
+           "type": "string",
+           "format": "date"
+       },
+       "rates": {
+           "type": "object",
+           "propertyNames": {
+               "$ref": "#/definitions/currencies"
+           },
+           "additionalProperties": {
+               "type": "number"
+           }
+       }
+   }
+}` (edited) 

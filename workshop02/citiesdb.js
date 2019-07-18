@@ -1,3 +1,4 @@
+const uuidv1 = require('uuid/v1')
 const MongoClient = require('mongodb').MongoClient;
 
 const f = function(config) {
@@ -86,6 +87,7 @@ f.prototype.findAllStates = function() {
 }
 
 f.prototype.insertCity = function(params) {
+	params._id = uuidv1().substring(0, 8);
 	return (
 		this.getDB()
 			.then(db => 
