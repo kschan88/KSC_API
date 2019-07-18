@@ -20,7 +20,9 @@ const express = require('express')
 const CitiesDB = require('./citiesdb');
 
 const serviceId = uuid().substring(0, 8);
-const serviceName = `zips-${serviceId}`
+//const serviceName = `zips-${serviceId}`
+// 18 july - change servicename to zip
+const serviceName = 'zips';
 
 //Load application keys
 //Rename _keys.json file to keys.json
@@ -48,18 +50,121 @@ app.use(express.urlencoded({ extended: true }));
 // Start of workshop
 
 // TODO 1/3 Load schemans
+// TODO 1/2 Load schemans
 
+//Loading the schema file
+const citySchema = require('./schema/city-schema.json');
 
+//new OpenAPIValidator({ 
+  //  apiSpecPath: join(__dirname, 'schema', 'city-api.yaml')
+//}).install(app)
 
+// Start of workshop
+// TODO 2/2 Copy your routes from workshop02 here
+
+// Mandatory workshop
+// TODO GET /api/states
+
+app.get('/api/states', 
+// Caching the data for 15 seconds, and the private: false mean share the cache to everyone
+
+	cacheControl({maxAge: 15, private: false}),
+    (req, resp) => {
+		console.info('GET LIST OF STATES', new Date())
+        // Content-Type: appliction/json
+        resp.type('application/json')
+
+        db.findAllStates()
+            .then(result => {
+                // 200 OK
+                resp.status(200)
+                resp.json(result);
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
+    }
+);
+
+// TODO GET /api/state/:state
+app.get('/api/state/:state', 
+    (req, resp) => {
+        const stateAbbrev = req.params.state;
+        resp.type('application/json')
+        db.findAllStates()
+            .then(result => {
+                if (result.indexOf(stateAbbrev.toUpperCase()) < 0) {
+                    resp.status(400);
+                    resp.json({ error: `Not a valid state: '${stateAbbrev}'`})
+                    return;
+                }
+                return (db.findCitiesByState(stateAbbrev))
+            })
+            .then(result => {
+                resp.status(200)
+                resp.json(result.map(v => `/api/city/${v}`));
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
+    }
+);
+
+// TODO GET /api/city/:cityId
+app.get('/api/city/:cityId',
+    (req, resp) => {
+        resp.type('application/json');
+        db.findCityById(req.params.cityId)
+            .then(result => {
+                if (result.length > 0) {
+                    resp.status(200)
+                    resp.json(result[0]);
+                    return
+                }
+                resp.status(404);
+                resp.json({ error: `City not found: ${req.params.cityId}`})
+            })
+            .catch(error => {
+                resp.status(400);
+                resp.json({ error: error});
+            })
+    }
+);
+
+// TODO POST /api/city
+// Content-Type: application/json
+/*
+    {
+    "city" : "BARRE",
+    "loc" : [ -72.108354, 42.409698 ],
+    "pop" : 4546,
+    "state" : "MA"
+}
+*/
+app.post('/api/city', 
+    schemaValidator.validate({ body: citySchema }),
+    (req, resp) => {
+        const newCity = req.body;
+        resp.type('application/json')
+        db.insertCity(newCity)
+            .then(result => {
+                resp.status(201)
+                resp.json(result);
+            })
+            .catch(error => {
+                resp.status(400);
+                resp.json({ error: error});
+            })
+    }
+)
 
 // TODO 2/3 Copy your routes from workshop03 here
-
-
-
-
-
 // End of workshop
-
+// If you want consul to call you, you must provide a health check. Consul will call this.
 app.get('/health', (req, resp) => {
 	console.info(`health check: ${new Date()}`)
 	resp.status(200)
@@ -87,8 +192,35 @@ db.getDB()
 			console.info(`\tService id: ${serviceId}`);
 
 			// TODO 3/3 Add service registration here
+			consul.agent.service.register({
+				id: serviceID,
+				name: serviceName, 
+				port: PORT, 
+				check: {
+					http: `http://localhost:${PORT}/health`,
+					interval: '5s',
+					// if consul cannot contact you within 30s, it will deregister the service
+					// ttl - i am sending a heart-beat to consul every 5 seconds (time to leave-ttl)
+					//'ttl': '5s',
+					deregistercriticalserviceafter: '30s'
 
+				}
 
+			})
+			//HeartBest - 18 July 2019
+			setInterval(
+				() => {
+					console.agent.check.pass({
+						// every 5 second pass the serviceID
+						
+						id: `service:${serviceID}`
+
+					})
+
+				},
+				6000  // run this function every 5 seconds
+
+			)
 
 
 		});
